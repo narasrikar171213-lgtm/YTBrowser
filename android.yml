@@ -1,0 +1,35 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build debug APK
+        run: |
+          chmod +x ./gradlew 2>/dev/null || true
+          if [ -x ./gradlew ]; then ./gradlew assembleDebug
+          else echo "Gradle wrapper missing; installing Gradle"; sudo apt-get update && sudo apt-get install -y gradle; gradle assembleDebug
+          fi
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: YT-Browser-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
